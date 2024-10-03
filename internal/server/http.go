@@ -3,15 +3,19 @@ package server
 import (
 	"github.com/go-kratos/kratos/v2/log"
 	"github.com/go-kratos/kratos/v2/middleware/recovery"
+	"github.com/go-kratos/kratos/v2/middleware/validate"
 	"github.com/go-kratos/kratos/v2/transport/http"
+	v1 "review-o/api/operation/v1"
 	"review-o/internal/conf"
+	"review-o/internal/service"
 )
 
 // NewHTTPServer new an HTTP server.
-func NewHTTPServer(c *conf.Server, logger log.Logger) *http.Server {
+func NewHTTPServer(c *conf.Server, operation *service.OperationService, logger log.Logger) *http.Server {
 	var opts = []http.ServerOption{
 		http.Middleware(
 			recovery.Recovery(),
+			validate.Validator(),
 		),
 	}
 	if c.Http.Network != "" {
@@ -24,6 +28,6 @@ func NewHTTPServer(c *conf.Server, logger log.Logger) *http.Server {
 		opts = append(opts, http.Timeout(c.Http.Timeout.AsDuration()))
 	}
 	srv := http.NewServer(opts...)
-	//v1.RegisterGreeterHTTPServer(srv, greeter)
+	v1.RegisterOperationHTTPServer(srv, operation)
 	return srv
 }
